@@ -55,3 +55,30 @@ def ensure_file_exists(filename):
     """
     if not os.path.exists(filename):
         open(filename, 'a').close()
+
+rconf_file = '.runningconfig'
+#runnig config file
+ensure_file_exists(rconf_file)
+
+def set_properties(interface_current, scheme_current, scheme_active=False):
+    properties = get_properties()
+    properties['interface_current'] = interface_current
+    properties['scheme_current'] = scheme_current
+    properties['scheme_active'] = scheme_active
+    f = open(rconf_file, 'w')
+    for prop in properties:
+        prop_line = str(prop) + '=' + str(properties[prop])
+        f.write(prop_line)
+
+def get_properties():
+    f = open(rconf_file, 'r')
+    properties = dict()
+    for line in f:
+        prop, prop_value = str(line).split('=')
+        properties[prop] = prop_value
+    return properties
+
+def get_property(prop):
+    properties = get_properties()
+    return properties[prop]
+
