@@ -179,8 +179,8 @@ class Scheme(object):
                                               self.as_args(),
                                               stderr=subprocess.STDOUT)
         ifup_output = ifup_output.decode('utf-8')
-        properties = {interface_current : self.interface,
-        scheme_current : self.name}
+        properties = {'interface_current' : self.interface,
+        'scheme_current' : self.name}
         set_properties(**properties)
 
         return self.parse_ifup_output(ifup_output)
@@ -188,7 +188,6 @@ class Scheme(object):
     def parse_ifup_output(self, output):
         matches = bound_ip_re.search(output)
         if matches:
-            set_properties(scheme_active=True)
             return Connection(scheme=self, ip_address=matches.group('ip_address'))
         else:
             raise ConnectionError("Failed to connect to %r" % self)

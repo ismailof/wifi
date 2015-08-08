@@ -8,7 +8,9 @@ try:
 except ImportError:  # Python < 3
     from StringIO import StringIO
 
-from wifi.utils import print_table, match, db2dbm
+from wifi.utils import (print_table, match, db2dbm, set_properties,
+get_properties, get_property, ensure_file_exists, MyStringIO)
+from mock import patch, MagicMock
 
 
 print_table_in = [
@@ -52,3 +54,44 @@ class db2dbMTest(TestCase):
         self.assertEqual(db2dbm(100), -50)
         self.assertEqual(db2dbm(101), -50)
         self.assertEqual(db2dbm(200), -50)
+
+
+properties_file_content = """scheme_current=test-scheme
+interface_current=test-interface
+scheme_active=True
+"""
+properties_file = MyStringIO(properties_file_content)
+
+class propertiesTest(TestCase):
+    def test_get_properties(self):
+        with patch('__builtin__.open', return_value=properties_file):
+            properties = get_properties()
+            self.assertEqual(properties['scheme_current'], 'test-scheme')
+            self.assertEqual(properties['interface_current'], 'test-interface')
+            self.assertEqual(properties['scheme_active'], 'True')
+        
+    def test_set_properties(self):
+        with patch('__builtin__.open', return_value=properties_file):
+            properties_to_set = {'scheme_current' : 'test-scheme00',
+            'scheme_active' : 'False',
+            'interface_current' : 'test-interface00'}
+            set_properties(**properties_to_set)
+            properties = get_properties()
+            self.assertEqual(properties['scheme_current'], 'test-scheme00')
+            self.assertEqual(properties['interface_current'], 'test-interface00')
+            self.assertEqual(properties['scheme_active'], 'False')
+            properties_to_set = {'interface_current' : 'test-interface00',
+            'scheme_active' : 'True'}
+            set_properties(properties_to_set)
+            properties = get_properties()
+            self.assertEqual(properties['scheme_current'], 'test-scheme00')
+            self.assertEqual(properties['interface_current'], 'test-interface00')
+            self.assertEqual(properties['scheme_active'], 'False')
+            properties_to_set = {'scheme_current' : 'test-scheme00',
+            'scheme_active' : 'True'}
+            set_properties(**properties_to_set)
+            properties = get_properties()
+            self.assertEqual(properties['scheme_current'], 'test-scheme00')
+            self.assertEqual(properties['interface_current'], 'test-interface00')
+            self.assertEqual(properties['scheme_active'], 'False')
+

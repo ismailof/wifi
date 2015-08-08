@@ -7,6 +7,12 @@ from wifi.scheme import extract_schemes, Scheme
 from wifi.exceptions import ConnectionError
 from wifi import subprocess_compat as subprocess
 from mock import patch
+from wifi.utils import MyStringIO
+
+try:
+    from io import StringIO
+except ImportError:  # Python < 3
+    from StringIO import StringIO
 
 
 NETWORK_INTERFACES_FILE = """
@@ -90,6 +96,13 @@ class TestSchemes(TestCase):
         assert self.Scheme.find('wlan0', 'test')
 
 
+properties_file_content = """scheme_current=test-scheme
+interface_current=test-interface
+scheme_active=True
+"""
+properties_file = MyStringIO(unicode(properties_file_content))
+
+
 class TestActivation(TestCase):
     def test_successful_connection(self):
         scheme = Scheme('wlan0', 'test')
@@ -107,11 +120,12 @@ class TestActivation(TestCase):
         scheme = Scheme('wlan0', 'test')
         with patch.object(subprocess, 'check_output',
                           return_value=SUCCESSFUL_IFUP_OUTPUT):
-            scheme.activate(sudo=True)
-            subprocess.check_output.assert_any_call(args, **kwargs)
-            args = ['/sbin/ifdown', 'wlan0']
-            scheme.activate()
-            subprocess.check_output.assert_any_call(args, **kwargs)
+            with patch('__builtin__.open', return_value=properties_file):
+                scheme.activate(sudo=True)
+                subprocess.check_output.assert_any_call(args, **kwargs)
+                args = ['/sbin/ifdown', 'wlan0']
+                scheme.activate()
+                subprocess.check_output.assert_any_call(args, **kwargs)
 
 
 class TestForCell(TestCase):
