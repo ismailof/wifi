@@ -81,6 +81,7 @@ class IWListParserTest(TestCase):
 class ScanningTest(TestCase):
     def test_scanning(self):
         self.assertRaises(InterfaceError, Cell.all, 'fake-interface')
+        self.assertRaises(InterfaceError, Cell.all, 'fake-interface', sudo=True)
 
 
 IWLIST_SCAN_NO_ENCRYPTION = """Cell 02 - Address: 38:83:45:CC:58:74
@@ -292,6 +293,7 @@ ABSOLUTE_QUALITY = """Cell 04 - Address: 50:06:04:C3:4D:93
                     Bit Rates:144 Mb/s
 """
 
+<<<<<<< HEAD
 NO_SSID_AT_ALL = """Cell 10 - Address: 02:CA:FE:CA:CA:40
                     Channel:5
                     Frequency:2.432 GHz (Channel 5)
@@ -315,3 +317,5 @@ NO_SSID_AT_ALL = """Cell 10 - Address: 02:CA:FE:CA:CA:40
                     IE: Unknown: 3D16050000000000FF000000000000000000000000000000
                     IE: Unknown: DD070050F202000100
 """
+=======
+>>>>>>> 4c84e9c85c54ee638e395c9f0c2f703ab76966b9
