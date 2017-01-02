@@ -179,12 +179,22 @@ class Scheme(object):
                                               self.as_args(),
                                               stderr=subprocess.STDOUT)
         ifup_output = ifup_output.decode('utf-8')
+        # set the running config file with current values
+        # we import here to avoid failures in tests
+        from wifi.utils import set_properties
+        properties = {'interface_current' : self.interface,
+        'scheme_current' : self.name}
+        set_properties(**properties)
 
         return self.parse_ifup_output(ifup_output)
 
     def parse_ifup_output(self, output):
         matches = bound_ip_re.search(output)
         if matches:
+            # set the running config file with current values
+            # we import here to avoid failures in tests
+            from wifi.utils import set_properties
+            set_properties(config=self.options)
             return Connection(scheme=self, ip_address=matches.group('ip_address'))
         else:
             raise ConnectionError("Failed to connect to %r" % self)

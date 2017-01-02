@@ -7,6 +7,12 @@ from wifi.scheme import extract_schemes, Scheme
 from wifi.exceptions import ConnectionError
 from wifi import subprocess_compat as subprocess
 from mock import patch
+from wifi.utils import MyStringIO
+
+try:
+    from io import StringIO
+except ImportError:  # Python < 3
+    from StringIO import StringIO
 
 
 NETWORK_INTERFACES_FILE = """
@@ -104,13 +110,18 @@ class TestSchemes(TestCase):
 
         assert self.Scheme.find('wlan0', 'test')
 
+def do_nothing(interface_current=None, scheme_current=None, config=None):
+    # mock of utils.set_properties because to avoid errors in tests
+    pass
 
 class TestActivation(TestCase):
+
     def test_successful_connection(self):
-        scheme = Scheme('wlan0', 'test')
-        connection = scheme.parse_ifup_output(SUCCESSFUL_IFUP_OUTPUT)
-        self.assertEqual(connection.scheme, scheme)
-        self.assertEqual(connection.ip_address, '192.168.1.113')
+        with patch('wifi.utils.set_properties', side_effect=do_nothing):
+            scheme = Scheme('wlan0', 'test')
+            connection = scheme.parse_ifup_output(SUCCESSFUL_IFUP_OUTPUT)
+            self.assertEqual(connection.scheme, scheme)
+            self.assertEqual(connection.ip_address, '192.168.1.113')
 
     def test_failed_connection(self):
         scheme = Scheme('wlan0', 'test')
@@ -121,7 +132,7 @@ class TestActivation(TestCase):
         kwargs = {'stderr':subprocess.STDOUT}
         scheme = Scheme('wlan0', 'test')
         with patch.object(subprocess, 'check_output',
-                          return_value=SUCCESSFUL_IFUP_OUTPUT):
+        return_value=SUCCESSFUL_IFUP_OUTPUT):
             scheme.activate(sudo=True)
             subprocess.check_output.assert_any_call(args, **kwargs)
             args = ['/sbin/ifdown', 'wlan0']
