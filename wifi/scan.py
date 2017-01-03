@@ -46,6 +46,10 @@ class Cell(object):
             iwlist_scan = iwlist_scan.decode('utf-8')
         cells = map(Cell.from_string, cells_re.split(iwlist_scan)[1:])
 
+        active_ssid = get_active_ssid(interface)
+        for cell in cells:
+            cell.active = True if cell.ssid == active_ssid else False
+
         return cells
 
     @classmethod
@@ -64,6 +68,19 @@ class Cell(object):
         """
         return list(filter(fn, cls.all(interface)))
 
+    @classmethod
+    def active(cls, interface):
+        """
+        Returns a cell containing the current active connection provided by iwgetid.
+        """
+        active_cell = cls.where(
+            interface,
+            lambda x: x.active == True)
+
+        if active_cell:
+            return active_cell[0]
+        else:
+            return None
 
 cells_re = re.compile(r'Cell \d+ - ')
 quality_re_dict = {'dBm': re.compile(r'Quality[=:](?P<quality>\d+/\d+).*Signal level[=:](?P<siglevel>-\d+) dBm?(.*Noise level[=:](?P<noiselevel>-\d+) dBm)?'),
@@ -173,3 +190,17 @@ def normalize(cell_block):
 
     return cell
 
+
+def get_active_ssid(interface):
+    try:
+        iwgetid = subprocess.check_output(
+            ['/sbin/iwgetid', interface , '-r'],
+            stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        return None
+        #raise InterfaceError(e.output.strip())
+
+    if not iwgetid:
+        return None
+
+    return iwgetid[:-1].decode('utf-8')
